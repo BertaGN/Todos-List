@@ -1,50 +1,70 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Todo } from "./Todo";
 import { TodoForm } from "./TodoForm";
 import { v4 as uuidv4 } from "uuid";
 import { EditTodo } from "./EditTodo";
+import { toHaveDescription } from "@testing-library/jest-dom/dist/matchers";
 
 export const TodoWrapper = () => {
   const [todos, setTodos] = useState([]);
 
   const addTodo = (todo) => {
     setTodos([
-      ...todos,
-      { id: uuidv4(), task: todo, completed: false, isEditing: false },
-    ]);
+      ...todos, todo]);
   }
 
-  const deleteTodo = (id) => setTodos(todos.filter((todo) => todo.id !== id));
+  const deleteTodo = async (todoId) => {
+    const res = await fetch(`http://localhost:4000/todo/${todoId}`, {
+      method: "DELETE",
+    })
+    const data = await res.json()
+    if (data.ok) {
+      const filteredTodos = todos.filter((todo) => {
+        return todo.todoId != todoId
+      })
+      setTodos(filteredTodos)
+    }
+  };
 
   const toggleComplete = (id) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
+    // setTodos(
+    //   todos.map((todo) =>
+    //     todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    //   )
+    // );
   }
 
   const editTodo = (id) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, isEditing: !todo.isEditing } : todo
-      )
-    );
+    // setTodos(
+    //   todos.map((todo) =>
+    //     todo.id === id ? { ...todo, isEditing: !todo.isEditing } : todo
+    //   )
+    // );
   }
 
   const editTask = (task, id) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, task, isEditing: !todo.isEditing } : todo
-      )
-    );
+    // setTodos(
+    //   todos.map((todo) =>
+    //     todo.id === id ? { ...todo, task, isEditing: !todo.isEditing } : todo
+    //   )
+    // );
   };
+  const getToDos = async () => {
+    const res = await fetch("http://localhost:4000/todo")
+    const data = await res.json()
+    setTodos(data.todos);
+    console.log(todos)
 
+  }
+  useEffect(() => {
+    getToDos()
+  }, [])
+console.log(todos)
   return (
     <div className="TodoWrapper">
       <h1>Add task</h1>
       <TodoForm addTodo={addTodo} />
-      {todos.map((todo) =>
+      {todos.length ? todos.map((todo) =>
         todo.isEditing ? (
           <EditTodo editTodo={editTask} task={todo} />
         ) : (
@@ -56,7 +76,7 @@ export const TodoWrapper = () => {
             toggleComplete={toggleComplete}
           />
         )
-      )}
+      ):<p>Nothing Here</p>}
     </div>
   );
 };
